@@ -39,26 +39,14 @@ export function createApp({ config, taskService, authMiddleware, bot }: CreateAp
   );
 
   if (bot && config.BOT_MODE === "webhook") {
-    app.use(config.WEBHOOK_PATH, validateTelegramWebhookSecret(config), bot.webhookCallback(config.WEBHOOK_PATH));
+    app.use(
+      bot.webhookCallback(config.WEBHOOK_PATH, {
+        secretToken: config.WEBHOOK_SECRET
+      })
+    );
   }
 
   app.use(errorHandler);
 
   return app;
-}
-
-function validateTelegramWebhookSecret(config: AppConfig): RequestHandler {
-  return (req, res, next) => {
-    if (!config.WEBHOOK_SECRET) {
-      res.status(401).json({ error: { code: "UNAUTHORIZED", message: "Invalid webhook secret" } });
-      return;
-    }
-
-    if (req.header("X-Telegram-Bot-Api-Secret-Token") !== config.WEBHOOK_SECRET) {
-      res.status(401).json({ error: { code: "UNAUTHORIZED", message: "Invalid webhook secret" } });
-      return;
-    }
-
-    next();
-  };
 }
