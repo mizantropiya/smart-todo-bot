@@ -10,11 +10,11 @@ describe("AddTaskForm", () => {
 
     render(<AddTaskForm onSubmit={onSubmit} />);
 
-    await user.type(screen.getByLabelText("Новая задача"), "  Купить продукты  ");
+    await user.type(screen.getByLabelText("Добавьте задачу"), "  Купить продукты  ");
     await user.click(screen.getByLabelText("Добавить задачу"));
 
     expect(onSubmit).toHaveBeenCalledWith("Купить продукты");
-    expect(screen.getByLabelText("Новая задача")).toHaveValue("");
+    expect(screen.getByLabelText("Добавьте задачу")).toHaveValue("");
   });
 
   it("disables submit while the input is empty", () => {

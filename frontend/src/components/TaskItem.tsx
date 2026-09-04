@@ -1,4 +1,4 @@
-import { Check, RotateCcw, Trash2 } from "lucide-react";
+import { Check, Trash2 } from "lucide-react";
 import type { Task } from "../api/types";
 
 type TaskItemProps = {
@@ -12,14 +12,15 @@ export function TaskItem({ task, isBusy = false, onToggle, onDelete }: TaskItemP
   return (
     <li className={task.completed ? "task task--completed" : "task"}>
       <button
-        className="icon-button task__toggle"
+        className="task__checkbox"
         type="button"
         title={task.completed ? "Вернуть в работу" : "Отметить выполненной"}
         aria-label={task.completed ? "Вернуть в работу" : "Отметить выполненной"}
         disabled={isBusy}
+        aria-pressed={task.completed}
         onClick={() => onToggle(task)}
       >
-        {task.completed ? <RotateCcw size={18} /> : <Check size={18} />}
+        {task.completed ? <Check size={18} aria-hidden="true" /> : null}
       </button>
       <span className="task__text">{task.text}</span>
       <button

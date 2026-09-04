@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { Plus } from "lucide-react";
+import { CornerDownLeft } from "lucide-react";
 
 type AddTaskFormProps = {
   disabled?: boolean;
@@ -30,9 +30,9 @@ export function AddTaskForm({ disabled = false, onSubmit }: AddTaskFormProps) {
   return (
     <form className="add-form" onSubmit={handleSubmit}>
       <input
-        aria-label="Новая задача"
+        aria-label="Добавьте задачу"
         maxLength={500}
-        placeholder="Новая задача"
+        placeholder="Добавьте задачу"
         value={text}
         disabled={disabled || isSubmitting}
         onChange={(event) => setText(event.target.value)}
@@ -43,7 +43,8 @@ export function AddTaskForm({ disabled = false, onSubmit }: AddTaskFormProps) {
         aria-label="Добавить задачу"
         disabled={!trimmedText || disabled || isSubmitting}
       >
-        <Plus size={20} />
+        <span>Enter</span>
+        <CornerDownLeft size={17} aria-hidden="true" />
       </button>
     </form>
   );

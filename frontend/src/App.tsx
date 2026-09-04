@@ -55,7 +55,7 @@ export function App() {
   return (
     <main className="app-shell">
       <section className="topbar" aria-label="Сводка задач">
-        <div>
+        <div className="topbar__title">
           <p className="eyebrow">Smart To-Do Bot</p>
           <h1>Задачи: {displayName}</h1>
         </div>
@@ -70,9 +70,16 @@ export function App() {
       <AddTaskForm disabled={isMutating} onSubmit={handleCreate} />
 
       {tasksQuery.isLoading ? (
-        <div className="state" role="status">
-          <Loader2 className="spin" size={22} />
-          <span>Загружаю задачи</span>
+        <div className="state state--loading" role="status">
+          <div className="loader-line">
+            <Loader2 className="spin" size={22} />
+            <span>Загружаем задачи...</span>
+          </div>
+          <div className="skeleton-list" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+          </div>
         </div>
       ) : null}
 
@@ -84,8 +91,9 @@ export function App() {
       ) : null}
 
       {!tasksQuery.isLoading && !tasksQuery.isError && tasks.length === 0 ? (
-        <div className="state">
-          <span>Список пуст. Добавь первую задачу.</span>
+        <div className="state state--empty">
+          <span>Список пуст.</span>
+          <strong>Добавьте первую задачу.</strong>
         </div>
       ) : null}
 
@@ -102,6 +110,8 @@ export function App() {
           ))}
         </ul>
       ) : null}
+
+      <footer className="app-footer">@mysmarttodooo_bot</footer>
     </main>
   );
 }
