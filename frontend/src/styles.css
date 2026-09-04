@@ -2,23 +2,26 @@
   color-scheme: dark;
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  color: #f4f0df;
+  color: #f4f1e8;
   background:
-    radial-gradient(circle at 20% 12%, rgba(255, 255, 255, 0.045), transparent 26%),
-    radial-gradient(circle at 82% 8%, rgba(190, 226, 200, 0.055), transparent 24%),
-    linear-gradient(115deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 9px),
-    linear-gradient(180deg, #203b34 0%, #152d28 48%, #102620 100%);
+    radial-gradient(circle at 12% 0%, rgba(255, 255, 255, 0.06), transparent 28%),
+    radial-gradient(circle at 85% 8%, rgba(255, 255, 255, 0.035), transparent 24%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 10px),
+    linear-gradient(180deg, #3e4244 0%, #2f3335 46%, #292d2f 100%);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
-  --board: rgba(16, 38, 32, 0.86);
-  --board-raised: rgba(30, 61, 52, 0.72);
-  --chalk: #f4f0df;
-  --chalk-muted: rgba(244, 240, 223, 0.68);
-  --chalk-line: rgba(244, 240, 223, 0.28);
-  --chalk-green: #b8e6c1;
-  --chalk-yellow: #f1d38a;
-  --chalk-red: #efaaa0;
-  --shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+  --board: #34383a;
+  --board-panel: rgba(47, 51, 53, 0.84);
+  --ink: #2f2b25;
+  --paper: #fff3bd;
+  --paper-blue: #d9ecff;
+  --paper-green: #dff3d2;
+  --paper-pink: #ffe0df;
+  --paper-lilac: #eadfff;
+  --label-paper: #f5ead2;
+  --muted: rgba(244, 241, 232, 0.68);
+  --line: rgba(255, 255, 255, 0.16);
+  --shadow: 0 18px 38px rgba(0, 0, 0, 0.24);
 }
 
 * {
@@ -28,7 +31,7 @@
 html {
   min-width: 320px;
   min-height: 100%;
-  background: #102620;
+  background: #292d2f;
 }
 
 body {
@@ -36,7 +39,7 @@ body {
   min-height: 100vh;
   margin: 0;
   background:
-    repeating-linear-gradient(3deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 8px),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 7px),
     transparent;
 }
 
@@ -47,14 +50,8 @@ body::before {
   pointer-events: none;
   content: "";
   background:
-    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.08), transparent 40%),
-    linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.026),
-      transparent 16%,
-      rgba(255, 255, 255, 0.018) 82%,
-      transparent
-    );
+    linear-gradient(90deg, rgba(0, 0, 0, 0.18), transparent 18%, transparent 82%, rgba(0, 0, 0, 0.14)),
+    radial-gradient(circle at 50% 18%, rgba(255, 255, 255, 0.075), transparent 45%);
   opacity: 0.72;
 }
 
@@ -70,29 +67,29 @@ button {
 button:disabled,
 input:disabled {
   cursor: not-allowed;
-  opacity: 0.56;
+  opacity: 0.58;
 }
 
 .app-shell {
-  width: min(720px, 100%);
+  width: min(960px, 100%);
   min-height: 100vh;
   margin: 0 auto;
-  padding: 22px 16px 24px;
+  padding: 18px 14px 22px;
 }
 
 .topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 18px;
-  padding: 17px 16px;
-  border: 1px solid var(--chalk-line);
+  gap: 14px;
+  margin-bottom: 14px;
+  padding: 14px;
+  border: 1px solid var(--line);
   border-radius: 8px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.018)),
-    var(--board-raised);
-  box-shadow: var(--shadow), inset 0 0 0 1px rgba(255, 255, 255, 0.035);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.022)),
+    var(--board-panel);
+  box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .topbar__title {
@@ -100,99 +97,104 @@ input:disabled {
 }
 
 .eyebrow {
-  margin: 0 0 7px;
-  color: var(--chalk-green);
-  font-size: 0.76rem;
-  font-weight: 800;
+  margin: 0 0 5px;
+  color: #d7d2c7;
+  font-size: 0.72rem;
+  font-weight: 700;
   letter-spacing: 0;
   text-transform: uppercase;
-  text-shadow: 0 0 9px rgba(184, 230, 193, 0.16);
 }
 
 h1 {
   margin: 0;
-  color: var(--chalk);
-  font-size: 1.48rem;
-  line-height: 1.16;
+  color: #fff8e9;
+  font-size: 1.34rem;
+  line-height: 1.18;
   overflow-wrap: anywhere;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .counter {
   display: grid;
   place-items: center;
   flex: 0 0 auto;
-  min-width: 76px;
-  height: 62px;
-  border: 1px solid rgba(241, 211, 138, 0.48);
-  border-radius: 8px;
-  background: rgba(11, 29, 24, 0.48);
-  color: var(--chalk);
-  box-shadow: inset 0 0 22px rgba(241, 211, 138, 0.045);
+  min-width: 82px;
+  height: 58px;
+  padding: 8px;
+  border: 1px solid rgba(71, 61, 44, 0.16);
+  border-radius: 7px;
+  background: #f7e7b6;
+  color: var(--ink);
+  box-shadow:
+    0 9px 18px rgba(0, 0, 0, 0.18),
+    inset 0 -10px 18px rgba(91, 71, 38, 0.05);
+  transform: rotate(0.7deg);
 }
 
 .counter strong {
-  color: var(--chalk-yellow);
-  font-size: 1.26rem;
+  font-size: 1.17rem;
   line-height: 1;
 }
 
 .counter span {
-  color: var(--chalk-muted);
-  font-size: 0.8rem;
+  color: rgba(47, 43, 37, 0.62);
+  font-size: 0.78rem;
 }
 
 .dev-note {
   margin: 0 0 12px;
-  color: var(--chalk-yellow);
-  font-size: 0.9rem;
+  color: #f6dd9a;
+  font-size: 0.88rem;
 }
 
 .add-form {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 86px;
+  grid-template-columns: minmax(0, 1fr) 88px;
   gap: 10px;
-  margin-bottom: 17px;
+  margin-bottom: 16px;
   padding: 10px;
-  border: 1px solid var(--chalk-line);
+  border: 1px solid var(--line);
   border-radius: 8px;
-  background: rgba(13, 33, 28, 0.64);
-  box-shadow: inset 0 0 30px rgba(255, 255, 255, 0.025);
+  background: rgba(34, 38, 40, 0.72);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
   transition:
     border-color 160ms ease,
-    box-shadow 160ms ease;
+    box-shadow 160ms ease,
+    background-color 160ms ease;
 }
 
 .add-form:focus-within {
-  border-color: rgba(184, 230, 193, 0.58);
+  border-color: rgba(255, 243, 189, 0.44);
+  background: rgba(39, 43, 45, 0.8);
   box-shadow:
-    0 0 0 3px rgba(184, 230, 193, 0.09),
-    inset 0 0 30px rgba(255, 255, 255, 0.035);
+    0 0 0 3px rgba(255, 243, 189, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .add-form input {
   min-width: 0;
   height: 48px;
   padding: 0 14px;
-  border: 1px solid transparent;
-  border-radius: 8px;
-  background: rgba(244, 240, 223, 0.092);
-  color: var(--chalk);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 7px;
+  background: #ece3cf;
+  color: var(--ink);
   outline: none;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.07);
   transition:
-    background-color 160ms ease,
     border-color 160ms ease,
-    box-shadow 160ms ease;
+    box-shadow 160ms ease,
+    transform 160ms ease;
 }
 
 .add-form input::placeholder {
-  color: rgba(244, 240, 223, 0.52);
+  color: rgba(47, 43, 37, 0.55);
 }
 
 .add-form input:focus {
-  border-color: rgba(244, 240, 223, 0.34);
-  background: rgba(244, 240, 223, 0.12);
-  box-shadow: inset 0 -1px 0 rgba(244, 240, 223, 0.18);
+  border-color: rgba(255, 243, 189, 0.78);
+  box-shadow:
+    0 0 0 3px rgba(255, 243, 189, 0.12),
+    inset 0 2px 4px rgba(0, 0, 0, 0.07);
 }
 
 .add-form button,
@@ -200,45 +202,40 @@ h1 {
 .task__checkbox {
   display: grid;
   place-items: center;
-  border-radius: 8px;
+  border-radius: 7px;
 }
 
 .add-form button {
   grid-auto-flow: column;
   gap: 6px;
-  width: 86px;
+  width: 88px;
   height: 48px;
-  border: 1px solid rgba(244, 240, 223, 0.42);
+  border: 1px solid rgba(0, 0, 0, 0.16);
   background:
-    linear-gradient(180deg, rgba(244, 240, 223, 0.14), rgba(244, 240, 223, 0.055)),
-    rgba(18, 45, 38, 0.96);
-  color: var(--chalk);
-  font-size: 0.84rem;
+    linear-gradient(180deg, #f7f4ed, #ddd8cc),
+    #ece7dc;
+  color: #34312c;
+  font-size: 0.82rem;
   font-weight: 800;
   box-shadow:
-    inset 0 -2px 0 rgba(0, 0, 0, 0.18),
-    0 8px 18px rgba(0, 0, 0, 0.18);
-  transform: translateY(0) scale(1);
+    0 4px 0 #aaa397,
+    0 9px 16px rgba(0, 0, 0, 0.22);
+  transform: translateY(0);
   transition:
     transform 110ms ease,
-    border-color 160ms ease,
-    box-shadow 160ms ease,
-    background-color 160ms ease;
+    box-shadow 110ms ease,
+    filter 160ms ease;
 }
 
 .add-form button:not(:disabled):hover {
-  border-color: rgba(184, 230, 193, 0.78);
-  box-shadow:
-    inset 0 -2px 0 rgba(0, 0, 0, 0.18),
-    0 10px 22px rgba(0, 0, 0, 0.2),
-    0 0 0 3px rgba(184, 230, 193, 0.08);
+  filter: brightness(1.04);
 }
 
 .add-form button:not(:disabled):active {
-  transform: translateY(1px) scale(0.96);
+  transform: translateY(3px) scale(0.98);
   box-shadow:
-    inset 0 1px 0 rgba(0, 0, 0, 0.18),
-    0 3px 10px rgba(0, 0, 0, 0.2);
+    0 1px 0 #aaa397,
+    0 4px 10px rgba(0, 0, 0, 0.22);
 }
 
 .state {
@@ -247,23 +244,25 @@ h1 {
   align-items: center;
   justify-content: center;
   gap: 12px;
-  min-height: 118px;
+  min-height: 126px;
   margin-top: 16px;
   padding: 18px;
-  border: 1px dashed rgba(244, 240, 223, 0.34);
+  border: 1px solid rgba(71, 61, 44, 0.14);
   border-radius: 8px;
-  background: rgba(14, 35, 30, 0.58);
-  color: var(--chalk-muted);
+  background: var(--label-paper);
+  color: var(--ink);
   text-align: center;
-  box-shadow: inset 0 0 28px rgba(255, 255, 255, 0.026);
+  box-shadow: 0 14px 24px rgba(0, 0, 0, 0.18);
+  transform: rotate(-0.45deg);
 }
 
 .state strong {
-  color: var(--chalk);
+  color: var(--ink);
 }
 
 .state--loading {
   align-items: stretch;
+  background: #e8eef2;
 }
 
 .loader-line {
@@ -280,16 +279,11 @@ h1 {
 
 .skeleton-list span {
   display: block;
-  height: 14px;
-  border-radius: 8px;
-  background: linear-gradient(
-    90deg,
-    rgba(244, 240, 223, 0.08),
-    rgba(244, 240, 223, 0.18),
-    rgba(244, 240, 223, 0.08)
-  );
+  height: 13px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(47, 43, 37, 0.07), rgba(47, 43, 37, 0.16), rgba(47, 43, 37, 0.07));
   background-size: 220% 100%;
-  animation: chalkSweep 1.25s ease-in-out infinite;
+  animation: paperSweep 1.25s ease-in-out infinite;
 }
 
 .skeleton-list span:nth-child(2) {
@@ -302,22 +296,85 @@ h1 {
 
 .state--empty {
   gap: 5px;
-  min-height: 104px;
+  min-height: 112px;
 }
 
 .state--error {
-  border-style: solid;
-  border-color: rgba(239, 170, 160, 0.58);
-  color: #ffd7d1;
+  background: #ffe0df;
+  color: #623431;
 }
 
 .spin {
   animation: spin 0.9s linear infinite;
 }
 
+.board-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+
+.task-column {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.012)),
+    rgba(36, 40, 42, 0.58);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.column-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 34px;
+  margin: 0 0 12px;
+  padding: 7px 11px;
+  border-radius: 6px;
+  background: var(--label-paper);
+  color: var(--ink);
+  box-shadow: 0 6px 13px rgba(0, 0, 0, 0.18);
+  transform: rotate(-0.6deg);
+}
+
+.task-column:nth-child(2) .column-label {
+  transform: rotate(0.55deg);
+}
+
+.column-label h2 {
+  margin: 0;
+  font-size: 0.94rem;
+  line-height: 1;
+}
+
+.column-label span {
+  display: grid;
+  place-items: center;
+  min-width: 24px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: rgba(47, 43, 37, 0.1);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.column-empty {
+  margin: 0;
+  padding: 16px 10px;
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
 .task-list {
   display: grid;
-  gap: 10px;
+  gap: 11px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -325,105 +382,125 @@ h1 {
 
 .task {
   display: grid;
-  grid-template-columns: 42px minmax(0, 1fr) 42px;
-  align-items: center;
-  gap: 11px;
-  min-height: 60px;
-  padding: 9px 10px;
-  border: 1px solid rgba(244, 240, 223, 0.25);
-  border-radius: 8px;
-  background:
-    linear-gradient(180deg, rgba(244, 240, 223, 0.07), rgba(244, 240, 223, 0.025)),
-    rgba(18, 43, 37, 0.78);
+  grid-template-columns: 38px minmax(0, 1fr) 38px;
+  align-items: start;
+  gap: 9px;
+  min-height: 82px;
+  padding: 11px;
+  border: 1px solid rgba(71, 61, 44, 0.13);
+  border-radius: 7px;
+  background: var(--paper);
+  color: var(--ink);
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.026),
-    0 8px 22px rgba(0, 0, 0, 0.16);
+    0 9px 18px rgba(0, 0, 0, 0.18),
+    inset 0 -14px 24px rgba(102, 80, 42, 0.04);
+  transform: rotate(-0.45deg);
+  animation: noteIn 140ms ease-out;
   transition:
-    border-color 160ms ease,
-    background-color 160ms ease,
-    transform 160ms ease,
-    opacity 160ms ease;
+    transform 150ms ease,
+    box-shadow 150ms ease,
+    opacity 150ms ease,
+    filter 150ms ease;
+}
+
+.task:nth-child(even) {
+  transform: rotate(0.55deg);
 }
 
 .task:hover {
-  border-color: rgba(244, 240, 223, 0.38);
-  transform: translateY(-1px);
+  box-shadow:
+    0 12px 22px rgba(0, 0, 0, 0.22),
+    inset 0 -14px 24px rgba(102, 80, 42, 0.04);
+  transform: translateY(-1px) rotate(0deg);
+}
+
+.note-1 {
+  background: var(--paper);
+}
+
+.note-2 {
+  background: var(--paper-blue);
+}
+
+.note-3 {
+  background: var(--paper-green);
+}
+
+.note-4 {
+  background: var(--paper-pink);
 }
 
 .task__text {
   min-width: 0;
-  color: var(--chalk);
+  color: var(--ink);
   overflow-wrap: anywhere;
-  line-height: 1.38;
+  line-height: 1.36;
+  padding-top: 3px;
   transition:
-    color 160ms ease,
-    opacity 160ms ease,
-    text-decoration-color 160ms ease;
+    color 150ms ease,
+    opacity 150ms ease,
+    text-decoration-color 150ms ease;
 }
 
 .task--completed {
-  border-color: rgba(184, 230, 193, 0.32);
-  background:
-    linear-gradient(180deg, rgba(184, 230, 193, 0.072), rgba(244, 240, 223, 0.022)),
-    rgba(15, 36, 31, 0.72);
+  background: var(--paper-lilac);
+  opacity: 0.9;
 }
 
 .task--completed .task__text {
-  color: rgba(244, 240, 223, 0.72);
+  color: rgba(47, 43, 37, 0.66);
   text-decoration: line-through;
-  text-decoration-color: rgba(184, 230, 193, 0.58);
+  text-decoration-color: rgba(47, 43, 37, 0.35);
   text-decoration-thickness: 2px;
 }
 
 .icon-button,
 .task__checkbox {
-  width: 42px;
-  height: 42px;
-  border: 1px solid rgba(244, 240, 223, 0.24);
-  background: rgba(244, 240, 223, 0.055);
-  color: var(--chalk);
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(47, 43, 37, 0.18);
+  background: rgba(255, 255, 255, 0.34);
+  color: #3f3a33;
   transition:
-    transform 130ms ease,
-    border-color 160ms ease,
-    background-color 160ms ease,
-    color 160ms ease;
+    transform 120ms ease,
+    border-color 150ms ease,
+    background-color 150ms ease,
+    color 150ms ease;
 }
 
 .task__checkbox {
   position: relative;
-  color: var(--chalk-green);
 }
 
 .task__checkbox::after {
   position: absolute;
   inset: 9px;
-  border: 1px solid rgba(244, 240, 223, 0.54);
-  border-radius: 5px;
+  border: 2px solid rgba(47, 43, 37, 0.5);
+  border-radius: 4px;
   content: "";
   transition:
-    border-color 140ms ease,
-    background-color 140ms ease,
-    box-shadow 140ms ease;
+    border-color 130ms ease,
+    background-color 130ms ease,
+    box-shadow 130ms ease;
 }
 
 .task__checkbox svg {
   position: relative;
   z-index: 1;
+  color: #2f6f47;
   stroke-width: 3;
-  filter: drop-shadow(0 0 5px rgba(184, 230, 193, 0.18));
-  animation: checkPop 150ms ease-out;
+  animation: checkPop 145ms ease-out;
 }
 
 .task__checkbox[aria-pressed="true"]::after {
-  border-color: rgba(184, 230, 193, 0.88);
-  background: rgba(184, 230, 193, 0.12);
-  box-shadow: 0 0 0 3px rgba(184, 230, 193, 0.055);
+  border-color: rgba(47, 111, 71, 0.72);
+  background: rgba(47, 111, 71, 0.1);
 }
 
 .task__checkbox:not(:disabled):hover,
 .icon-button:not(:disabled):hover {
-  border-color: rgba(244, 240, 223, 0.46);
-  background: rgba(244, 240, 223, 0.085);
+  border-color: rgba(47, 43, 37, 0.32);
+  background: rgba(255, 255, 255, 0.52);
 }
 
 .task__checkbox:not(:disabled):active,
@@ -432,20 +509,18 @@ h1 {
 }
 
 .task__delete {
-  color: rgba(239, 170, 160, 0.9);
+  color: rgba(128, 55, 48, 0.72);
 }
 
 .task__delete:not(:disabled):hover {
-  border-color: rgba(239, 170, 160, 0.48);
-  color: #ffd0ca;
+  color: #823730;
 }
 
 .app-footer {
-  margin-top: 22px;
-  color: rgba(244, 240, 223, 0.48);
-  font-size: 0.84rem;
+  margin-top: 20px;
+  color: rgba(244, 241, 232, 0.46);
+  font-size: 0.82rem;
   text-align: center;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 @keyframes spin {
@@ -457,16 +532,20 @@ h1 {
 @keyframes checkPop {
   0% {
     opacity: 0;
-    transform: scale(0.62) rotate(-8deg);
+    transform: scale(0.68);
+  }
+
+  80% {
+    transform: scale(1.1);
   }
 
   100% {
     opacity: 1;
-    transform: scale(1) rotate(0);
+    transform: scale(1);
   }
 }
 
-@keyframes chalkSweep {
+@keyframes paperSweep {
   0% {
     background-position: 100% 0;
   }
@@ -476,45 +555,53 @@ h1 {
   }
 }
 
+@keyframes noteIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px) rotate(0deg);
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 700px) {
+  .board-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 430px) {
   .app-shell {
-    padding: 14px 12px 20px;
+    padding: 12px 10px 18px;
   }
 
   .topbar {
-    align-items: flex-start;
-    padding: 15px 13px;
+    padding: 13px;
   }
 
   h1 {
-    font-size: 1.26rem;
+    font-size: 1.18rem;
   }
 
   .counter {
-    min-width: 68px;
-    height: 58px;
+    min-width: 72px;
+    height: 54px;
   }
 
   .add-form {
-    grid-template-columns: minmax(0, 1fr) 78px;
+    grid-template-columns: minmax(0, 1fr) 82px;
     padding: 8px;
   }
 
   .add-form button {
-    width: 78px;
+    width: 82px;
     font-size: 0.78rem;
   }
 
-  .task {
-    grid-template-columns: 40px minmax(0, 1fr) 40px;
-    gap: 9px;
-    padding: 8px;
-  }
-
-  .icon-button,
-  .task__checkbox {
-    width: 40px;
-    height: 40px;
+  .task-column {
+    padding: 10px;
   }
 }
 

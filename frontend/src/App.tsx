@@ -3,7 +3,7 @@ import { AlertCircle, Loader2 } from "lucide-react";
 import { createTask, deleteTask, getTasks, updateTask } from "./api/client";
 import type { Task } from "./api/types";
 import { AddTaskForm } from "./components/AddTaskForm";
-import { TaskItem } from "./components/TaskItem";
+import { TaskColumn } from "./components/TaskColumn";
 import { useTelegramWebApp } from "./hooks/useTelegramWebApp";
 
 const TASKS_QUERY_KEY = ["tasks"];
@@ -33,6 +33,8 @@ export function App() {
   });
 
   const tasks = tasksQuery.data ?? [];
+  const todoTasks = tasks.filter((task) => !task.completed);
+  const completedTasks = tasks.filter((task) => task.completed);
   const completedCount = tasks.filter((task) => task.completed).length;
   const isMutating = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
   const devAuthActive =
@@ -98,17 +100,26 @@ export function App() {
       ) : null}
 
       {tasks.length > 0 ? (
-        <ul className="task-list" aria-label="Список задач">
-          {tasks.map((task) => (
-            <TaskItem
-              key={task.id}
-              task={task}
-              isBusy={isMutating}
-              onToggle={handleToggle}
-              onDelete={handleDelete}
-            />
-          ))}
-        </ul>
+        <div className="board-grid" aria-label="Доска задач">
+          <TaskColumn
+            title="Надо сделать"
+            count={todoTasks.length}
+            emptyText="Здесь пока свободно."
+            tasks={todoTasks}
+            isBusy={isMutating}
+            onToggle={handleToggle}
+            onDelete={handleDelete}
+          />
+          <TaskColumn
+            title="Сделано"
+            count={completedTasks.length}
+            emptyText="Готовые задачи появятся здесь."
+            tasks={completedTasks}
+            isBusy={isMutating}
+            onToggle={handleToggle}
+            onDelete={handleDelete}
+          />
+        </div>
       ) : null}
 
       <footer className="app-footer">@mysmarttodooo_bot</footer>

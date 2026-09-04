@@ -9,8 +9,10 @@ type TaskItemProps = {
 };
 
 export function TaskItem({ task, isBusy = false, onToggle, onDelete }: TaskItemProps) {
+  const noteVariant = getNoteVariant(task.id);
+
   return (
-    <li className={task.completed ? "task task--completed" : "task"}>
+    <li className={`task note-${noteVariant}${task.completed ? " task--completed" : ""}`}>
       <button
         className="task__checkbox"
         type="button"
@@ -35,4 +37,10 @@ export function TaskItem({ task, isBusy = false, onToggle, onDelete }: TaskItemP
       </button>
     </li>
   );
+}
+
+function getNoteVariant(id: string): number {
+  const lastChar = id.replace(/-/g, "").at(-1) ?? "0";
+  const parsed = Number.parseInt(lastChar, 16);
+  return Number.isNaN(parsed) ? 1 : (parsed % 4) + 1;
 }
