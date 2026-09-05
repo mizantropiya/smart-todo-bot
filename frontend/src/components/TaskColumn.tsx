@@ -3,7 +3,6 @@ import { TaskItem } from "./TaskItem";
 
 type TaskColumnProps = {
   title: string;
-  count: number;
   emptyText: string;
   tasks: Task[];
   isBusy?: boolean;
@@ -13,21 +12,15 @@ type TaskColumnProps = {
 
 export function TaskColumn({
   title,
-  count,
   emptyText,
   tasks,
   isBusy = false,
   onToggle,
   onDelete
 }: TaskColumnProps) {
-  const headingId = `column-${title}`;
-
   return (
-    <section className="task-column" aria-labelledby={headingId}>
-      <div className="column-label">
-        <h2 id={headingId}>{title}</h2>
-        <span>{count}</span>
-      </div>
+    <section className="task-column" role="region" aria-label={title}>
+      <h2 className="column-title">{title}</h2>
 
       {tasks.length > 0 ? (
         <ul className="task-list" aria-label={title}>

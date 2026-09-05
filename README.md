@@ -118,7 +118,7 @@ All task queries and mutations are scoped with that server-side `telegramUserId`
 | PATCH | `/api/tasks/:id` | Yes | Mark a user's own task completed or incomplete |
 | DELETE | `/api/tasks/:id` | Yes | Delete a user's own task |
 
-Protected endpoints return `401` when Telegram auth fails. Invalid UUID params or invalid task text return `400`. A valid task id that belongs to another user returns `404`.
+Protected endpoints return `401` when Telegram auth fails. Invalid UUID params or invalid task text return `400`. Task text is trimmed and limited to 160 characters. Each Telegram user can store up to 99 tasks total; creating another task returns `409 TASK_LIMIT_REACHED`. A valid task id that belongs to another user returns `404`.
 
 ## Backend Environment
 

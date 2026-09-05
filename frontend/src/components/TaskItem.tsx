@@ -42,5 +42,5 @@ export function TaskItem({ task, isBusy = false, onToggle, onDelete }: TaskItemP
 function getNoteVariant(id: string): number {
   const lastChar = id.replace(/-/g, "").at(-1) ?? "0";
   const parsed = Number.parseInt(lastChar, 16);
-  return Number.isNaN(parsed) ? 1 : (parsed % 5) + 1;
+  return Number.isNaN(parsed) ? 1 : (parsed % 7) + 1;
 }

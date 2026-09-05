@@ -12,7 +12,8 @@ type ApiErrorResponse = {
 export class ApiError extends Error {
   constructor(
     message: string,
-    public readonly status: number
+    public readonly status: number,
+    public readonly code?: string
   ) {
     super(message);
   }
@@ -43,14 +44,19 @@ export async function deleteTask(id: string): Promise<void> {
 }
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const response = await fetch(`${apiUrl}${path}`, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...getAuthHeaders(),
-      ...init.headers
-    }
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${apiUrl}${path}`, {
+      ...init,
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+        ...init.headers
+      }
+    });
+  } catch {
+    throw new ApiError("Не удалось связаться с сервером.", 0, "NETWORK_ERROR");
+  }
 
   if (response.status === 204) {
     return undefined as T;
@@ -60,7 +66,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (!response.ok) {
     const apiError = body as ApiErrorResponse;
     const message = apiError.error?.message ?? "Не удалось выполнить запрос";
-    throw new ApiError(message, response.status);
+    throw new ApiError(message, response.status, apiError.error?.code);
   }
 
   return body as T;

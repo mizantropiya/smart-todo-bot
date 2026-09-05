@@ -1,5 +1,6 @@
-import type { PrismaClient, Task } from "@prisma/client";
-import { notFoundError } from "../lib/errors";
+import { Prisma, type PrismaClient, type Task } from "@prisma/client";
+import { notFoundError, taskLimitReachedError } from "../lib/errors";
+import { MAX_TASKS_PER_USER } from "./constants";
 import type { CreateTaskInput, UpdateTaskInput } from "./schemas";
 
 export type TaskDto = {
@@ -30,12 +31,27 @@ export class PrismaTaskService implements TaskService {
   }
 
   async create(telegramUserId: string, input: CreateTaskInput): Promise<TaskDto> {
-    const task = await this.prisma.task.create({
-      data: {
-        telegramUserId,
-        text: input.text
+    const task = await this.prisma.$transaction(
+      async (tx) => {
+        const taskCount = await tx.task.count({
+          where: { telegramUserId }
+        });
+
+        if (taskCount >= MAX_TASKS_PER_USER) {
+          throw taskLimitReachedError();
+        }
+
+        return tx.task.create({
+          data: {
+            telegramUserId,
+            text: input.text
+          }
+        });
+      },
+      {
+        isolationLevel: Prisma.TransactionIsolationLevel.Serializable
       }
-    });
+    );
 
     return toDto(task);
   }

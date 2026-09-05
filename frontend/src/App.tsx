@@ -1,9 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, Loader2 } from "lucide-react";
-import { createTask, deleteTask, getTasks, updateTask } from "./api/client";
+import { ApiError, createTask, deleteTask, getTasks, updateTask } from "./api/client";
 import type { Task } from "./api/types";
 import { AddTaskForm } from "./components/AddTaskForm";
 import { TaskColumn } from "./components/TaskColumn";
+import { MAX_TASKS_PER_USER } from "./constants";
 import { useTelegramWebApp } from "./hooks/useTelegramWebApp";
 
 const TASKS_QUERY_KEY = ["tasks"];
@@ -35,9 +36,9 @@ export function App() {
   const tasks = tasksQuery.data ?? [];
   const todoTasks = tasks.filter((task) => !task.completed);
   const completedTasks = tasks.filter((task) => task.completed);
-  const completedCount = tasks.filter((task) => task.completed).length;
-  const counterText = `${formatCount(completedCount)} из ${formatCount(tasks.length)}`;
+  const isTaskLimitReached = tasks.length >= MAX_TASKS_PER_USER;
   const isMutating = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
+  const createErrorMessage = createMutation.error ? getCreateErrorMessage(createMutation.error) : null;
   const devAuthActive =
     import.meta.env.DEV &&
     import.meta.env.VITE_DEV_AUTH_ENABLED === "true" &&
@@ -61,14 +62,21 @@ export function App() {
         <div className="topbar__title">
           <h1>Ваши задачи:</h1>
         </div>
-        <div className="counter" aria-label={`Выполнено задач: ${counterText}`}>
-          <strong>{counterText}</strong>
-        </div>
       </section>
 
       {devAuthActive ? <p className="dev-note">Dev auth включен для локального браузера.</p> : null}
 
-      <AddTaskForm disabled={isMutating} onSubmit={handleCreate} />
+      <AddTaskForm disabled={isMutating || isTaskLimitReached} onSubmit={handleCreate} />
+      {isTaskLimitReached ? (
+        <p className="form-hint">
+          Достигнут лимит в 99 задач. Удалите одну задачу, чтобы добавить новую.
+        </p>
+      ) : null}
+      {createErrorMessage ? (
+        <p className="form-hint form-hint--error" role="alert">
+          {createErrorMessage}
+        </p>
+      ) : null}
 
       {tasksQuery.isLoading ? (
         <div className="state state--loading" role="status">
@@ -87,7 +95,7 @@ export function App() {
       {tasksQuery.isError ? (
         <div className="state state--error" role="alert">
           <AlertCircle size={22} />
-          <span>Не удалось загрузить задачи. Проверь авторизацию и backend.</span>
+          <span>{getLoadErrorMessage(tasksQuery.error)}</span>
         </div>
       ) : null}
 
@@ -102,7 +110,6 @@ export function App() {
         <div className="board-grid" aria-label="Доска задач">
           <TaskColumn
             title="Надо сделать"
-            count={todoTasks.length}
             emptyText="Здесь пока пусто"
             tasks={todoTasks}
             isBusy={isMutating}
@@ -111,7 +118,6 @@ export function App() {
           />
           <TaskColumn
             title="Сделано"
-            count={completedTasks.length}
             emptyText="Здесь пока пусто"
             tasks={completedTasks}
             isBusy={isMutating}
@@ -126,6 +132,34 @@ export function App() {
   );
 }
 
-function formatCount(count: number): string {
-  return String(Math.min(count, 99));
+function getLoadErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    if (error.status === 401) {
+      return "Не удалось подтвердить Telegram-сессию.";
+    }
+    if (error.status === 0) {
+      return "Не удалось связаться с сервером.";
+    }
+    if (error.status >= 500) {
+      return "Ошибка сервера при загрузке задач.";
+    }
+  }
+
+  return "Не удалось загрузить задачи.";
+}
+
+function getCreateErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    if (error.status === 409 && error.code === "TASK_LIMIT_REACHED") {
+      return "Достигнут лимит в 99 задач. Удалите одну задачу, чтобы добавить новую.";
+    }
+    if (error.status === 401) {
+      return "Не удалось подтвердить Telegram-сессию.";
+    }
+    if (error.status === 0) {
+      return "Не удалось связаться с сервером.";
+    }
+  }
+
+  return "Не удалось добавить задачу.";
 }

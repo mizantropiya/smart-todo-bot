@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { createApp } from "../../src/app";
 import type { AppConfig } from "../../src/config/env";
 import { createAuthMiddleware } from "../../src/middleware/auth";
+import { MAX_TASKS_PER_USER, MAX_TASK_TEXT_LENGTH } from "../../src/tasks/constants";
 import { MemoryTaskService } from "../helpers/memoryTaskService";
 
 const config: AppConfig = {
@@ -143,9 +144,97 @@ describe("task API", () => {
       .expect(400);
 
     await request(app)
+      .post("/api/tasks")
+      .set("X-Dev-Telegram-User-Id", "user-a")
+      .send({ text: "   " })
+      .expect(400);
+
+    await request(app)
+      .post("/api/tasks")
+      .set("X-Dev-Telegram-User-Id", "user-a")
+      .send({ text: "а".repeat(MAX_TASK_TEXT_LENGTH + 1) })
+      .expect(400);
+
+    await request(app)
       .patch("/api/tasks/not-a-uuid")
       .set("X-Dev-Telegram-User-Id", "user-a")
       .send({ completed: true })
       .expect(400);
+  });
+
+  it("accepts task text up to 160 characters", async () => {
+    const app = makeApp();
+    const text = "а".repeat(MAX_TASK_TEXT_LENGTH);
+
+    const response = await request(app)
+      .post("/api/tasks")
+      .set("X-Dev-Telegram-User-Id", "user-a")
+      .send({ text })
+      .expect(201);
+
+    expect(response.body.text).toBe(text);
+  });
+
+  it("enforces the 99 task limit per authenticated user", async () => {
+    const app = makeApp();
+
+    for (let index = 1; index < MAX_TASKS_PER_USER; index += 1) {
+      await request(app)
+        .post("/api/tasks")
+        .set("X-Dev-Telegram-User-Id", "user-a")
+        .send({ text: `Task ${index}` })
+        .expect(201);
+    }
+
+    await request(app)
+      .post("/api/tasks")
+      .set("X-Dev-Telegram-User-Id", "user-a")
+      .send({ text: "Task 99" })
+      .expect(201);
+
+    const limitResponse = await request(app)
+      .post("/api/tasks")
+      .set("X-Dev-Telegram-User-Id", "user-a")
+      .send({ text: "Task 100" })
+      .expect(409);
+
+    expect(limitResponse.body.error).toEqual({
+      code: "TASK_LIMIT_REACHED",
+      message: "Достигнут лимит в 99 задач"
+    });
+
+    await request(app)
+      .post("/api/tasks")
+      .set("X-Dev-Telegram-User-Id", "user-b")
+      .send({ text: "Other user task" })
+      .expect(201);
+  });
+
+  it("allows creating again after a task is deleted below the limit", async () => {
+    const app = makeApp();
+
+    for (let index = 1; index <= MAX_TASKS_PER_USER; index += 1) {
+      await request(app)
+        .post("/api/tasks")
+        .set("X-Dev-Telegram-User-Id", "user-a")
+        .send({ text: `Task ${index}` })
+        .expect(201);
+    }
+
+    const listed = await request(app)
+      .get("/api/tasks")
+      .set("X-Dev-Telegram-User-Id", "user-a")
+      .expect(200);
+
+    await request(app)
+      .delete(`/api/tasks/${listed.body[0].id}`)
+      .set("X-Dev-Telegram-User-Id", "user-a")
+      .expect(204);
+
+    await request(app)
+      .post("/api/tasks")
+      .set("X-Dev-Telegram-User-Id", "user-a")
+      .send({ text: "Replacement task" })
+      .expect(201);
   });
 });

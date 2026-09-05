@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
-import { notFoundError } from "../../src/lib/errors";
+import { notFoundError, taskLimitReachedError } from "../../src/lib/errors";
+import { MAX_TASKS_PER_USER } from "../../src/tasks/constants";
 import type { CreateTaskInput, UpdateTaskInput } from "../../src/tasks/schemas";
 import type { TaskDto, TaskService } from "../../src/tasks/taskService";
 
@@ -14,6 +15,11 @@ export class MemoryTaskService implements TaskService {
   }
 
   async create(telegramUserId: string, input: CreateTaskInput): Promise<TaskDto> {
+    const taskCount = [...this.tasks.values()].filter((task) => task.telegramUserId === telegramUserId).length;
+    if (taskCount >= MAX_TASKS_PER_USER) {
+      throw taskLimitReachedError();
+    }
+
     const now = new Date();
     const task = {
       id: crypto.randomUUID(),
