@@ -10,7 +10,7 @@ const TASKS_QUERY_KEY = ["tasks"];
 
 export function App() {
   const queryClient = useQueryClient();
-  const { displayName, hasInitData } = useTelegramWebApp();
+  const { hasInitData } = useTelegramWebApp();
 
   const tasksQuery = useQuery({
     queryKey: TASKS_QUERY_KEY,
@@ -36,6 +36,7 @@ export function App() {
   const todoTasks = tasks.filter((task) => !task.completed);
   const completedTasks = tasks.filter((task) => task.completed);
   const completedCount = tasks.filter((task) => task.completed).length;
+  const counterText = `${formatCount(completedCount)} из ${formatCount(tasks.length)}`;
   const isMutating = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
   const devAuthActive =
     import.meta.env.DEV &&
@@ -58,12 +59,10 @@ export function App() {
     <main className="app-shell">
       <section className="topbar" aria-label="Сводка задач">
         <div className="topbar__title">
-          <p className="eyebrow">Smart To-Do Bot</p>
-          <h1>Задачи: {displayName}</h1>
+          <h1>Ваши задачи:</h1>
         </div>
-        <div className="counter" aria-label="Выполнено задач">
-          <strong>{completedCount}</strong>
-          <span>из {tasks.length}</span>
+        <div className="counter" aria-label={`Выполнено задач: ${counterText}`}>
+          <strong>{counterText}</strong>
         </div>
       </section>
 
@@ -104,7 +103,7 @@ export function App() {
           <TaskColumn
             title="Надо сделать"
             count={todoTasks.length}
-            emptyText="Здесь пока свободно."
+            emptyText="Здесь пока пусто"
             tasks={todoTasks}
             isBusy={isMutating}
             onToggle={handleToggle}
@@ -113,7 +112,7 @@ export function App() {
           <TaskColumn
             title="Сделано"
             count={completedTasks.length}
-            emptyText="Готовые задачи появятся здесь."
+            emptyText="Здесь пока пусто"
             tasks={completedTasks}
             isBusy={isMutating}
             onToggle={handleToggle}
@@ -125,4 +124,8 @@ export function App() {
       <footer className="app-footer">@mysmarttodooo_bot</footer>
     </main>
   );
+}
+
+function formatCount(count: number): string {
+  return String(Math.min(count, 99));
 }
