@@ -1,162 +1,231 @@
-# Telegram Mini App — Smart To-Do Bot
+# Smart To-Do Bot
 
-Smart To-Do Bot is a full-stack Telegram Mini App for a personal task list. Users open the Mini App from the Telegram bot, manage tasks in a React UI, and all task operations are protected by server-side validation of Telegram Mini Apps `initData`.
+Telegram Mini App для управления персональным списком задач.
 
-Telegram Bot: `@mysmarttodooo_bot`
+Пользователь открывает приложение через Telegram-бота, работает со списком задач в Mini App, а данные сохраняются в PostgreSQL и изолируются по Telegram user ID.
 
-## Stack
+## Demo
 
-Backend:
+- Telegram Bot: [@mysmarttodooo_bot](https://t.me/mysmarttodooo_bot)
+- Mini App: [https://smart-todo-bot-1.onrender.com](https://smart-todo-bot-1.onrender.com)
+- Backend API: [https://smart-todo-bot-wpse.onrender.com](https://smart-todo-bot-wpse.onrender.com)
+- Health Check: [https://smart-todo-bot-wpse.onrender.com/api/health](https://smart-todo-bot-wpse.onrender.com/api/health)
 
-- Node.js 22 LTS
-- TypeScript
-- Express
-- Telegraf
-- Zod
-- Prisma ORM
-- PostgreSQL
-- Vitest + Supertest
+## Возможности
 
-Frontend:
+- Запуск через команду `/start` в Telegram.
+- Кнопка `Открыть список задач` в сообщении бота.
+- Telegram Mini App с mobile-first интерфейсом.
+- Создание задач.
+- Отметка задачи выполненной и возврат в невыполненные.
+- Удаление задач.
+- Две визуальные секции: `Надо сделать` и `Сделано`.
+- Persistence в PostgreSQL: данные сохраняются после повторного открытия приложения.
+- Отдельный список задач для каждого Telegram-пользователя.
+- Server-side Telegram authentication через signed `initData`.
+- Sticky-note board дизайн.
+- Loading, empty и error states.
+
+Ограничения в текущем API:
+
+- Максимум 160 символов на текст задачи.
+- Максимум 99 задач на одного Telegram-пользователя.
+
+## Технологии
+
+### Frontend
 
 - React
 - TypeScript
 - Vite
 - TanStack Query
+
+### Backend
+
+- Node.js
+- TypeScript
+- Express
+- Telegraf
+- Zod
+
+### Database
+
+- PostgreSQL
+- Prisma ORM
+- Neon
+
+### Infrastructure
+
+- Render Static Site
+- Render Web Service
+- Docker / Docker Compose
+- GitHub Actions
+
+### Testing
+
+- Vitest
+- Supertest
 - React Testing Library
 
-Infrastructure:
-
-- Docker
-- Docker Compose
-- GitHub Actions CI
-- Render Static Site for frontend
-- Render Web Service for backend + bot
-- Neon PostgreSQL
-
-## Architecture
+## Архитектура
 
 ```text
 Telegram User
-↓
-Telegram Bot / Telegraf
-↓
+      |
+      v
+Telegram Bot (Telegraf)
+      |
+      v
 Web App Button
-↓
+      |
+      v
 React Mini App
-↓
-raw Telegram initData
-↓
-Express Auth Middleware
-↓
+      |
+      v
+Telegram initData
+      |
+      v
+Express Authentication Middleware
+      |
+      v
 REST API
-↓
+      |
+      v
 Task Service
-↓
+      |
+      v
 Prisma
-↓
+      |
+      v
 PostgreSQL / Neon
 ```
 
-## Repository Structure
+Frontend отвечает за Mini App UI, отправку signed Telegram `initData` и синхронизацию задач через REST API. Backend проверяет Telegram authentication, запускает bot/webhook режим и выполняет операции с задачами. Database хранит задачи с привязкой к server-authenticated Telegram user ID.
 
-```text
-frontend/
-  src/
-  public/
-  package.json
-  .env.example
-  Dockerfile
+## Авторизация Telegram
 
-backend/
-  src/
-    auth/
-    bot/
-    config/
-    lib/
-    middleware/
-    routes/
-    tasks/
-    types/
-    app.ts
-    server.ts
-  prisma/
-  tests/
-  package.json
-  .env.example
-  Dockerfile
-
-.github/workflows/ci.yml
-docker-compose.yml
-.gitignore
-README.md
-```
-
-## Authentication Model
-
-The frontend is not a trusted identity source. It never sends `telegramUserId` as the authority for ownership.
-
-Telegram Mini Apps provide signed raw init data in `window.Telegram.WebApp.initData`. The frontend forwards this raw string on every protected API request:
+Frontend получает raw `Telegram.WebApp.initData` внутри Telegram Mini App и отправляет его на backend в заголовке:
 
 ```text
 Authorization: tma <raw-init-data>
 ```
 
-The backend validates the signature with `BOT_TOKEN`, checks `auth_date`, parses the signed `user`, converts `user.id` to a string, and only then sets the authenticated Telegram user context.
+Backend проверяет Telegram signature с использованием `BOT_TOKEN`, валидирует `auth_date`, извлекает signed `user.id` и только после этого использует его как owner ID для задач.
 
-All task queries and mutations are scoped with that server-side `telegramUserId`. Supplying another user id from the browser, query string, or request body is not supported.
+Frontend не может самостоятельно передать произвольный `telegramUserId` и получить чужие данные. `initDataUnsafe` не используется как доверенная server-side identity.
 
-`window.Telegram.WebApp.initDataUnsafe` is used only as optional UI display data and is never used for authentication.
+## Безопасность
+
+- Все операции с задачами scoped authenticated Telegram user.
+- User A не может читать задачи User B.
+- User A не может изменять задачи User B.
+- User A не может удалять задачи User B.
+- Telegram `initData` проверяется на backend.
+- Webhook защищен Telegram secret token.
+- Development authentication отключен в production.
+- Secrets передаются через Environment Variables.
+- `.env` файлы не коммитятся.
+- CORS в production ограничен frontend origin.
+- API защищен от IDOR за счет user-scoped queries и mutations.
+
+## Модель данных
+
+Основная модель: `Task`.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `id` | UUID | Идентификатор задачи |
+| `telegramUserId` | string | Server-authenticated Telegram user ID |
+| `text` | string | Текст задачи |
+| `completed` | boolean | Статус выполнения |
+| `createdAt` | DateTime | Дата создания |
+| `updatedAt` | DateTime | Дата последнего обновления |
+
+В Prisma schema есть индекс `@@index([telegramUserId, createdAt])` для выборок задач пользователя.
 
 ## REST API
 
 | Method | Endpoint | Auth | Description |
 | --- | --- | --- | --- |
-| GET | `/api/health` | No | Process health check for Render monitoring |
-| GET | `/api/tasks` | Yes | List tasks for the authenticated Telegram user |
-| POST | `/api/tasks` | Yes | Create a task for the authenticated Telegram user |
-| PATCH | `/api/tasks/:id` | Yes | Mark a user's own task completed or incomplete |
-| DELETE | `/api/tasks/:id` | Yes | Delete a user's own task |
+| GET | `/api/health` | No | Health check backend service |
+| GET | `/api/tasks` | Yes | Получить задачи authenticated Telegram user |
+| POST | `/api/tasks` | Yes | Создать задачу |
+| PATCH | `/api/tasks/:id` | Yes | Обновить `completed` для своей задачи |
+| DELETE | `/api/tasks/:id` | Yes | Удалить свою задачу |
 
-Protected endpoints return `401` when Telegram auth fails. Invalid UUID params or invalid task text return `400`. Task text is trimmed and limited to 160 characters. Each Telegram user can store up to 99 tasks total; creating another task returns `409 TASK_LIMIT_REACHED`. A valid task id that belongs to another user returns `404`.
+POST `/api/tasks`:
 
-## Backend Environment
+```json
+{
+  "text": "Купить продукты"
+}
+```
 
-Create `backend/.env` locally. It is ignored by Git.
+PATCH `/api/tasks/:id`:
 
-| Variable | Required | Example | Description |
-| --- | --- | --- | --- |
-| `NODE_ENV` | Yes | `development` | Runtime environment |
-| `PORT` | Yes | `4000` | HTTP port |
-| `HOST` | Yes | `0.0.0.0` | Bind host for Render/Docker |
-| `DATABASE_URL` | Yes | `postgresql://...` | PostgreSQL or Neon connection URL |
-| `BOT_TOKEN` | Required for auth and bot | `<bot-token>` | Secret from BotFather |
-| `BOT_USERNAME` | Yes | `mysmarttodooo_bot` | Public bot username without `@` |
-| `MINI_APP_URL` | Required when bot enabled | `https://<frontend>.onrender.com` | HTTPS frontend URL for the Web App button |
-| `CORS_ORIGIN` | Production yes | `https://<frontend>.onrender.com` | Allowed frontend origin |
-| `BOT_MODE` | Yes | `disabled`, `polling`, `webhook` | Bot startup mode |
-| `WEBHOOK_BASE_URL` | Webhook yes | `https://<backend>.onrender.com` | Public backend URL |
-| `WEBHOOK_PATH` | Webhook yes | `/telegram/webhook` | Webhook route |
-| `WEBHOOK_SECRET` | Webhook yes | `<strong-random-secret>` | Telegram secret token, use letters, digits, `_`, `-` |
-| `TELEGRAM_INIT_DATA_MAX_AGE_SECONDS` | Yes | `86400` | Max accepted initData age |
-| `DEV_AUTH_ENABLED` | Development only | `false` | Enables local browser auth fallback only in development |
-| `DEV_TELEGRAM_USER_ID` | Development only | `123456789` | Synthetic local user id |
+```json
+{
+  "completed": true
+}
+```
 
-`DIRECT_URL` is not required by the current Prisma schema. If a future Neon setup requires a separate direct connection for migrations, add it deliberately instead of guessing it.
+Коды ответов:
 
-## Frontend Environment
+- `POST /api/tasks` возвращает `201`.
+- `DELETE /api/tasks/:id` возвращает `204`.
+- Validation errors возвращают `400`.
+- Ошибка Telegram auth возвращает `401`.
+- Задача не найдена или принадлежит другому пользователю возвращает `404`.
+- Превышение лимита 99 задач возвращает `409` с code `TASK_LIMIT_REACHED`.
 
-Create `frontend/.env` locally if you need values different from defaults.
+## Environment Variables
 
-| Variable | Required | Example | Description |
-| --- | --- | --- | --- |
-| `VITE_API_URL` | Yes | `http://localhost:4000` | Backend base URL |
-| `VITE_DEV_AUTH_ENABLED` | Development only | `false` | Enables local browser fallback only in Vite dev mode |
-| `VITE_DEV_TELEGRAM_USER_ID` | Development only | `123456789` | Synthetic local user id |
+### Backend
 
-Production builds do not fall back to dev auth automatically.
+| Variable | Required | Description |
+| --- | --- | --- |
+| `NODE_ENV` | Yes | Runtime environment: `development`, `test`, `production` |
+| `PORT` | Yes | HTTP port, по умолчанию `4000` |
+| `HOST` | Yes | Bind host, по умолчанию `0.0.0.0` |
+| `DATABASE_URL` | Yes | PostgreSQL / Neon connection URL |
+| `DIRECT_URL` | No | Optional direct database URL, поддерживается конфигурацией |
+| `BOT_TOKEN` | Required for bot/auth | Telegram Bot Token из BotFather |
+| `BOT_USERNAME` | Yes | Bot username без `@` |
+| `MINI_APP_URL` | Required when bot enabled | HTTPS URL frontend Mini App |
+| `BOT_MODE` | Yes | `disabled`, `polling` или `webhook` |
+| `WEBHOOK_BASE_URL` | Required for webhook | Public HTTPS backend URL |
+| `WEBHOOK_PATH` | Required for webhook | Webhook path, например `/telegram/webhook` |
+| `WEBHOOK_SECRET` | Required for webhook | Secret token для Telegram webhook |
+| `CORS_ORIGIN` | Production yes | Allowed frontend origin |
+| `TELEGRAM_INIT_DATA_MAX_AGE_SECONDS` | Yes | Max accepted age для Telegram `initData` |
+| `DEV_AUTH_ENABLED` | Development only | Local browser auth fallback |
+| `DEV_TELEGRAM_USER_ID` | Development only | Synthetic Telegram user ID для dev auth |
 
-## Local Development
+### Frontend
+
+| Variable | Required | Description |
+| --- | --- | --- |
+| `VITE_API_URL` | Yes | Backend base URL |
+| `VITE_DEV_AUTH_ENABLED` | Development only | Local browser auth fallback для Vite dev |
+| `VITE_DEV_TELEGRAM_USER_ID` | Development only | Synthetic Telegram user ID для dev auth |
+
+Не храните реальные `BOT_TOKEN`, `DATABASE_URL`, Neon password или `WEBHOOK_SECRET` в repository.
+
+## Локальный запуск
+
+```bash
+git clone https://github.com/mizantropiya/smart-todo-bot.git
+cd smart-todo-bot
+```
+
+Создайте локальные env files из примеров:
+
+```bash
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
+```
+
+На Windows файлы можно скопировать вручную.
 
 Backend:
 
@@ -176,45 +245,71 @@ npm ci
 npm run dev
 ```
 
-For ordinary localhost browser testing without Telegram, enable development auth:
+По умолчанию frontend dev server запускается Vite, backend dev server запускается через `tsx watch`.
+
+## Локальная разработка без Telegram
+
+Обычный localhost browser не получает настоящий Telegram `initData`. Для локальной разработки предусмотрен dev auth.
+
+Backend `.env`:
 
 ```text
-backend/.env:
 NODE_ENV=development
 DEV_AUTH_ENABLED=true
 DEV_TELEGRAM_USER_ID=123456789
+```
 
-frontend/.env:
+Frontend `.env`:
+
+```text
 VITE_DEV_AUTH_ENABLED=true
 VITE_DEV_TELEGRAM_USER_ID=123456789
 ```
 
-Do not enable dev auth in production. The backend ignores this fallback unless `NODE_ENV === "development"`.
+**Development authentication запрещен в production.** Backend принимает dev auth только при `NODE_ENV=development`, frontend отправляет dev auth только в Vite development mode.
 
 ## Docker
 
-Validate Compose:
-
-```bash
-docker compose config
-```
-
-Run the local stack:
+Запуск локального stack:
 
 ```bash
 docker compose up --build
 ```
 
-Services:
+Compose поднимает:
 
-- Frontend: `http://localhost:5173`
-- Backend: `http://localhost:4000`
-- Health: `http://localhost:4000/api/health`
 - PostgreSQL: `localhost:5432`
+- Backend: `http://localhost:4000`
+- Frontend: `http://localhost:5173`
+- Health endpoint: `http://localhost:4000/api/health`
 
-The backend container applies migrations with `prisma migrate deploy` before starting.
+PostgreSQL данные сохраняются в Docker volume `postgres_data`.
 
-## Testing
+Остановка:
+
+```bash
+docker compose down
+```
+
+## Миграции базы данных
+
+Development:
+
+```bash
+cd backend
+npm run prisma:migrate:dev
+```
+
+Production:
+
+```bash
+cd backend
+npm run prisma:migrate:deploy
+```
+
+Не используйте `prisma migrate reset` для production.
+
+## Тестирование
 
 Backend:
 
@@ -237,155 +332,177 @@ npm run build
 npm test
 ```
 
-Integration tests use an in-memory task service and dev auth middleware. They do not use the production or Neon database.
+Тесты покрывают Telegram `initData`, invalid signature, expired auth, API validation, CRUD, user isolation, webhook routing, 160-character limit, лимит 99 задач и frontend components/states.
 
-## Prisma Migrations
+Integration tests используют in-memory task service и dev auth middleware. Production Neon database в тестах не используется.
 
-The migration is stored in:
+## Настройка Telegram Bot
 
-```text
-backend/prisma/migrations/20260904000000_create_tasks/migration.sql
-```
+1. Открыть `@BotFather`.
+2. Выполнить `/newbot`.
+3. Получить Bot Token.
+4. Добавить token в backend Environment Variables как `BOT_TOKEN`.
+5. Настроить `MINI_APP_URL`.
 
-Production migration command:
+Production Mini App URL должен быть HTTPS.
 
-```bash
-cd backend
-npm run prisma:migrate:deploy
-```
+Текущий bot проекта: [@mysmarttodooo_bot](https://t.me/mysmarttodooo_bot).
 
-Do not use `prisma migrate reset` or `prisma db push --force-reset` in production.
+## Polling для локальной разработки
 
-## Telegram Bot Setup
-
-For a new bot:
-
-1. Open BotFather.
-2. Run `/newbot`.
-3. Create the bot and receive a token.
-4. Put the token into backend environment as `BOT_TOKEN`.
-5. Never commit the token.
-
-This project is prepared for the existing bot:
-
-```text
-@mysmarttodooo_bot
-```
-
-## Polling Development
-
-Use polling only for local development when you want the bot process to receive updates directly:
+Для локальной разработки bot можно запускать в polling mode:
 
 ```text
 BOT_MODE=polling
-MINI_APP_URL=https://<public-https-frontend-url>
 ```
 
-Telegram Mini Apps require HTTPS in real Telegram clients. A Render Static Site URL is suitable; plain localhost is not suitable for production Mini App launch.
+Polling удобен, когда backend process сам получает Telegram updates. Не запускайте webhook и polling одновременно для одного bot token.
 
 ## Production Webhook
 
-Render production should use webhook mode:
+Production использует:
 
 ```text
 BOT_MODE=webhook
-WEBHOOK_BASE_URL=https://<backend>.onrender.com
+WEBHOOK_BASE_URL=https://smart-todo-bot-wpse.onrender.com
 WEBHOOK_PATH=/telegram/webhook
-WEBHOOK_SECRET=<strong-random-secret>
-MINI_APP_URL=https://<frontend>.onrender.com
 ```
 
-The backend checks Telegram's `X-Telegram-Bot-Api-Secret-Token` header on webhook requests.
+Telegram отправляет updates на публичный HTTPS backend. Backend проверяет `WEBHOOK_SECRET` через Telegram secret token header.
 
-## Render Backend Deployment
+Реальное значение `WEBHOOK_SECRET` не публикуется.
 
-Create a Render Web Service:
+## Production Deployment
 
-- Root Directory: `backend`
-- Build Command: `npm ci && npm run prisma:generate && npm run build`
-- Start Command: `npm start`
+Фактическая production схема:
 
-Environment:
+- Frontend: Render Static Site
+- Backend + Bot: Render Web Service
+- Database: Neon PostgreSQL
+- Bot mode: Telegram Webhook
 
-```text
-NODE_ENV=production
-DATABASE_URL=<Neon secret>
-BOT_TOKEN=<BotFather secret>
-BOT_USERNAME=mysmarttodooo_bot
-CORS_ORIGIN=https://<frontend>.onrender.com
-BOT_MODE=webhook
-WEBHOOK_BASE_URL=https://<backend>.onrender.com
-WEBHOOK_PATH=/telegram/webhook
-WEBHOOK_SECRET=<strong-random-secret>
-TELEGRAM_INIT_DATA_MAX_AGE_SECONDS=86400
-DEV_AUTH_ENABLED=false
-MINI_APP_URL=https://<frontend>.onrender.com
-```
-
-For the first backend deploy, use:
-
-```text
-BOT_MODE=disabled
-```
-
-Then deploy frontend, set the final frontend URL, switch backend to webhook mode, and redeploy.
-
-## Render Frontend Deployment
-
-Create a Render Static Site:
+### Frontend — Render Static Site
 
 - Root Directory: `frontend`
 - Build Command: `npm ci && npm run build`
 - Publish Directory: `dist`
-
-Environment:
+- Environment:
 
 ```text
-VITE_API_URL=https://<backend>.onrender.com
-VITE_DEV_AUTH_ENABLED=false
+VITE_API_URL=https://smart-todo-bot-wpse.onrender.com
 ```
 
-## Production Deployment Order
+### Backend — Render Web Service
 
-1. Confirm Neon database exists.
-2. Deploy backend to Render with `BOT_MODE=disabled`.
-3. Get backend HTTPS URL.
-4. Check `GET /api/health`.
-5. Deploy frontend Render Static Site with `VITE_API_URL=<backend URL>`.
-6. Get frontend HTTPS URL.
-7. Update backend env: `MINI_APP_URL`, `CORS_ORIGIN`, `BOT_MODE=webhook`, `WEBHOOK_BASE_URL`, `WEBHOOK_SECRET`.
-8. Redeploy backend.
-9. Run `npm run prisma:migrate:deploy` as the production migration step if Render has not run it separately.
-10. Send `/start` to `@mysmarttodooo_bot`.
-11. Click `Открыть список задач`.
-12. Verify create, toggle, delete, close, and reopen persistence.
+- Root Directory: `backend`
+- Build Command: `npm ci && npm run prisma:generate && npm run build`
+- Start Command: `npm start`
+- Environment variable names:
 
-## GitHub CI
+```text
+NODE_ENV=production
+DATABASE_URL
+BOT_TOKEN
+BOT_USERNAME=mysmarttodooo_bot
+BOT_MODE=webhook
+WEBHOOK_BASE_URL=https://smart-todo-bot-wpse.onrender.com
+WEBHOOK_PATH=/telegram/webhook
+WEBHOOK_SECRET
+MINI_APP_URL=https://smart-todo-bot-1.onrender.com
+CORS_ORIGIN=https://smart-todo-bot-1.onrender.com
+TELEGRAM_INIT_DATA_MAX_AGE_SECONDS=86400
+DEV_AUTH_ENABLED=false
+```
 
-`.github/workflows/ci.yml` installs backend and frontend dependencies, validates Prisma, applies migrations to a temporary PostgreSQL service, runs lint, builds both apps, and runs tests.
+Не публикуйте реальные secret values.
 
-## Security
+## Deployment Order
 
-- Secrets are ignored via `.gitignore`.
-- `BOT_TOKEN`, `DATABASE_URL`, and webhook secrets must stay out of source, docs, Dockerfiles, CI, frontend code, and bundles.
-- The backend accepts dev auth only when `NODE_ENV === "development"` and `DEV_AUTH_ENABLED=true`.
-- The frontend sends dev auth only when Vite is running in development mode.
-- User A cannot list, patch, or delete User B's tasks because every operation is scoped by the server-authenticated Telegram user id.
-- `auth_date` is checked with a default max age of `86400` seconds.
-- Webhook mode validates Telegram's secret token header.
+1. Создать Neon PostgreSQL.
+2. Получить `DATABASE_URL`.
+3. Deploy backend на Render с `BOT_MODE=disabled`.
+4. Проверить `https://smart-todo-bot-wpse.onrender.com/api/health`.
+5. Deploy frontend на Render Static Site с `VITE_API_URL=https://smart-todo-bot-wpse.onrender.com`.
+6. Получить frontend HTTPS URL.
+7. В backend добавить `MINI_APP_URL` и `CORS_ORIGIN`.
+8. Настроить `WEBHOOK_BASE_URL` и `WEBHOOK_SECRET`.
+9. Переключить `BOT_MODE=webhook`.
+10. Redeploy backend.
+11. Открыть Telegram bot [@mysmarttodooo_bot](https://t.me/mysmarttodooo_bot).
+12. Выполнить `/start`.
+13. Открыть Mini App через кнопку `Открыть список задач`.
+
+## Render Free Cold Start
+
+Render Free Web Service может переходить в sleep после периода бездействия. Поэтому первый запрос после простоя иногда выполняется заметно дольше обычного. После запуска instance последующие запросы работают нормально.
 
 ## Troubleshooting
 
-- `401 Telegram authentication failed`: open the app inside Telegram or enable dev auth locally.
-- `/start` has no button: set `MINI_APP_URL` and run backend with `BOT_MODE=polling` or `BOT_MODE=webhook`.
-- Frontend cannot reach backend: check `VITE_API_URL` and backend CORS `CORS_ORIGIN`.
-- Prisma cannot connect: verify `DATABASE_URL` and that migrations have been deployed.
-- Telegram Mini App does not open: verify the frontend URL is HTTPS.
+### Mini App показывает ошибку авторизации
 
-## Possible Improvements
+- Открывайте приложение именно через кнопку Telegram-бота.
+- Проверьте `BOT_TOKEN`.
+- Проверьте системное время и `auth_date`.
+- Проверьте backend logs.
 
-- Task editing.
-- Due dates.
-- Optimistic UI updates.
-- More granular frontend error messages.
-- End-to-end tests against a disposable PostgreSQL database.
+### `/start` не отвечает
+
+- Проверьте `BOT_MODE`.
+- Проверьте webhook URL.
+- Проверьте `WEBHOOK_SECRET`.
+- Проверьте Render logs.
+
+### CORS
+
+- Проверьте, что `CORS_ORIGIN` точно совпадает с frontend origin.
+
+### Первый запрос очень долгий
+
+- Это может быть Render Free cold start после sleep.
+
+### Frontend открыт напрямую в браузере
+
+- Production Telegram auth не будет работать без Telegram `initData`.
+- Для local development используйте documented dev auth.
+
+## Структура проекта
+
+```text
+backend/
+  prisma/
+  src/
+  tests/
+  Dockerfile
+  package.json
+
+frontend/
+  src/
+  Dockerfile
+  package.json
+
+.github/
+  workflows/
+
+docker-compose.yml
+README.md
+```
+
+## Основные решения
+
+- Telegram `initData` проверяется на backend, frontend user ID не считается доверенным.
+- Все task operations scoped authenticated Telegram user.
+- PostgreSQL + Prisma используются для persistence.
+- Telegraf webhook используется в production.
+- TanStack Query отвечает за client synchronization после create/toggle/delete.
+- Render + Neon выбраны как простая production-ready схема для тестового проекта.
+
+## Ограничения
+
+- Максимум 99 задач на пользователя.
+- Максимум 160 символов на задачу.
+- Render Free cold start может замедлить первый запрос после простоя.
+- Priorities, due dates, tags, drag-and-drop и редактирование текста не реализованы, потому что не входят в текущий scope.
+
+## GitHub CI
+
+`.github/workflows/ci.yml` запускает backend и frontend checks на push в `main` и pull request. Backend job поднимает temporary PostgreSQL service, валидирует Prisma, применяет migrations, запускает lint/build/tests. Frontend job запускает lint/build/tests.
