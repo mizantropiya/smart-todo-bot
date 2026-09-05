@@ -127,7 +127,6 @@ export function App() {
         </div>
       ) : null}
 
-      <footer className="app-footer">@mysmarttodooo_bot</footer>
     </main>
   );
 }
