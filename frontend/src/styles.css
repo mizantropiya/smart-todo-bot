@@ -406,7 +406,6 @@ h1 {
 }
 
 .task__text {
-  position: relative;
   display: inline-block;
   width: fit-content;
   max-width: 100%;
@@ -427,19 +426,10 @@ h1 {
 
 .task--completed .task__text {
   color: rgba(47, 43, 37, 0.66);
-}
-
-.task--completed .task__text::after {
-  position: absolute;
-  right: 0;
-  left: 0;
-  top: calc(50% + 2px);
-  height: 2px;
-  border-radius: 999px;
-  background: rgba(47, 43, 37, 0.34);
-  content: "";
-  transform: translateY(-50%);
-  pointer-events: none;
+  text-decoration-line: line-through;
+  text-decoration-color: rgba(47, 43, 37, 0.48);
+  text-decoration-thickness: 1.5px;
+  text-decoration-skip-ink: auto;
 }
 
 .icon-button,
