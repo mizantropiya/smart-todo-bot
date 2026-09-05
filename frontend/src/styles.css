@@ -80,8 +80,8 @@ input:disabled {
 }
 
 .topbar {
-  margin-bottom: 12px;
-  padding: 6px 4px 4px;
+  margin-bottom: 10px;
+  padding: 8px 4px;
 }
 
 .topbar__title {
@@ -316,11 +316,13 @@ h1 {
 }
 
 .column-title {
-  margin: 0 0 12px;
+  width: 100%;
+  margin: 0 0 10px;
   color: #f2ead7;
   font-size: 0.98rem;
   font-weight: 800;
   line-height: 1.2;
+  text-align: center;
 }
 
 .column-empty {
@@ -551,7 +553,7 @@ h1 {
   }
 
   .topbar {
-    padding: 13px;
+    padding: 8px 4px;
   }
 
   h1 {
