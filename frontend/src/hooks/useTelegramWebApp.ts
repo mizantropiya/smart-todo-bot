@@ -9,8 +9,7 @@ export function useTelegramWebApp() {
   return useMemo(() => {
     const webApp = window.Telegram?.WebApp;
     return {
-      hasInitData: Boolean(webApp?.initData),
-      displayName: webApp?.initDataUnsafe?.user?.first_name ?? "мой список"
+      hasInitData: Boolean(webApp?.initData)
     };
   }, []);
 }

@@ -5,19 +5,11 @@ import { unauthorizedError } from "../lib/errors";
 const MAX_CLOCK_SKEW_SECONDS = 60;
 
 const telegramUserSchema = z.object({
-  id: z.union([z.number().int(), z.string().min(1)]),
-  first_name: z.string().optional(),
-  last_name: z.string().optional(),
-  username: z.string().optional(),
-  language_code: z.string().optional()
+  id: z.union([z.number().int(), z.string().min(1)])
 });
 
 export type AuthenticatedTelegramUser = {
   telegramUserId: string;
-  firstName?: string;
-  lastName?: string;
-  username?: string;
-  languageCode?: string;
 };
 
 export type ValidateInitDataOptions = {
@@ -88,11 +80,7 @@ export function validateTelegramInitData(
   try {
     const parsedUser = telegramUserSchema.parse(JSON.parse(rawUser));
     return {
-      telegramUserId: String(parsedUser.id),
-      firstName: parsedUser.first_name,
-      lastName: parsedUser.last_name,
-      username: parsedUser.username,
-      languageCode: parsedUser.language_code
+      telegramUserId: String(parsedUser.id)
     };
   } catch {
     throw unauthorizedError();

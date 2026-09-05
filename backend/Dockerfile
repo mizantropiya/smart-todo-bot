@@ -3,6 +3,15 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
+FROM deps AS development
+COPY prisma ./prisma
+COPY tsconfig.json eslint.config.mjs ./
+COPY src ./src
+RUN npm run prisma:generate
+EXPOSE 4000
+HEALTHCHECK --interval=10s --timeout=3s --start-period=20s --retries=5 CMD ["node", "-e", "fetch('http://localhost:4000/api/health').then((r)=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+CMD ["npm", "run", "dev"]
+
 FROM deps AS build
 COPY prisma ./prisma
 COPY tsconfig.json eslint.config.mjs ./
@@ -19,4 +28,5 @@ COPY --from=build /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=build /app/prisma ./prisma
 COPY --from=build /app/dist ./dist
 EXPOSE 4000
+HEALTHCHECK --interval=10s --timeout=3s --start-period=20s --retries=5 CMD ["node", "-e", "fetch('http://localhost:4000/api/health').then((r)=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
 CMD ["npm", "start"]

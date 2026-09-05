@@ -188,9 +188,7 @@ PATCH `/api/tasks/:id`:
 | `PORT` | Yes | HTTP port, по умолчанию `4000` |
 | `HOST` | Yes | Bind host, по умолчанию `0.0.0.0` |
 | `DATABASE_URL` | Yes | PostgreSQL / Neon connection URL |
-| `DIRECT_URL` | No | Optional direct database URL, поддерживается конфигурацией |
 | `BOT_TOKEN` | Required for bot/auth | Telegram Bot Token из BotFather |
-| `BOT_USERNAME` | Yes | Bot username без `@` |
 | `MINI_APP_URL` | Required when bot enabled | HTTPS URL frontend Mini App |
 | `BOT_MODE` | Yes | `disabled`, `polling` или `webhook` |
 | `WEBHOOK_BASE_URL` | Required for webhook | Public HTTPS backend URL |
@@ -276,12 +274,22 @@ VITE_DEV_TELEGRAM_USER_ID=123456789
 docker compose up --build
 ```
 
-Compose поднимает:
+Compose поднимает local development stack:
 
 - PostgreSQL: `localhost:5432`
 - Backend: `http://localhost:4000`
-- Frontend: `http://localhost:5173`
+- Vite frontend: `http://localhost:5173`
 - Health endpoint: `http://localhost:4000/api/health`
+
+Docker local frontend работает через development-only auth:
+
+```text
+VITE_API_URL=http://localhost:4000
+VITE_DEV_AUTH_ENABLED=true
+VITE_DEV_TELEGRAM_USER_ID=123456789
+```
+
+Production authentication по-прежнему требует Telegram `initData`.
 
 PostgreSQL данные сохраняются в Docker volume `postgres_data`.
 
@@ -290,6 +298,14 @@ PostgreSQL данные сохраняются в Docker volume `postgres_data`.
 ```bash
 docker compose down
 ```
+
+Полное удаление local DB volume:
+
+```bash
+docker compose down -v
+```
+
+`-v` удаляет локальные PostgreSQL данные.
 
 ## Миграции базы данных
 
@@ -403,7 +419,6 @@ VITE_API_URL=https://smart-todo-bot-wpse.onrender.com
 NODE_ENV=production
 DATABASE_URL
 BOT_TOKEN
-BOT_USERNAME=mysmarttodooo_bot
 BOT_MODE=webhook
 WEBHOOK_BASE_URL=https://smart-todo-bot-wpse.onrender.com
 WEBHOOK_PATH=/telegram/webhook

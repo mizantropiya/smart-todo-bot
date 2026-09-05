@@ -61,3 +61,57 @@ jobs:
       - run: npm run lint
       - run: npm run build
       - run: npm test
+
+  docker-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Docker Compose
+        run: docker compose config
+      - name: Build Docker Compose stack
+        run: docker compose build
+      - name: Start Docker Compose stack
+        run: docker compose up -d
+      - name: Smoke test local Docker stack
+        run: |
+          set -euo pipefail
+
+          for attempt in {1..60}; do
+            if curl -fsS http://localhost:4000/api/health >/dev/null; then
+              break
+            fi
+            sleep 2
+          done
+          curl -fsS http://localhost:4000/api/health
+
+          for attempt in {1..60}; do
+            if curl -fsS http://localhost:5173 >/dev/null; then
+              break
+            fi
+            sleep 2
+          done
+          curl -fsS http://localhost:5173 >/dev/null
+
+          created_id="$(
+            curl -fsS \
+              -H "Content-Type: application/json" \
+              -H "X-Dev-Telegram-User-Id: 123456789" \
+              -d '{"text":"Docker smoke task"}' \
+              http://localhost:4000/api/tasks |
+            node -e "let data=''; process.stdin.on('data', chunk => data += chunk); process.stdin.on('end', () => process.stdout.write(JSON.parse(data).id));"
+          )"
+
+          curl -fsS -H "X-Dev-Telegram-User-Id: 123456789" http://localhost:4000/api/tasks >/dev/null
+          curl -fsS \
+            -X PATCH \
+            -H "Content-Type: application/json" \
+            -H "X-Dev-Telegram-User-Id: 123456789" \
+            -d '{"completed":true}' \
+            "http://localhost:4000/api/tasks/${created_id}" >/dev/null
+          curl -fsS \
+            -X DELETE \
+            -H "X-Dev-Telegram-User-Id: 123456789" \
+            "http://localhost:4000/api/tasks/${created_id}" >/dev/null
+      - name: Stop Docker Compose stack
+        if: always()
+        run: docker compose down -v

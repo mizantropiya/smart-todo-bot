@@ -20,7 +20,7 @@ describe("validateTelegramInitData", () => {
         maxAgeSeconds: 86400,
         now
       })
-    ).toMatchObject({ telegramUserId: "123456789", firstName: "Test" });
+    ).toEqual({ telegramUserId: "123456789" });
   });
 
   it("rejects tampered initData", () => {
